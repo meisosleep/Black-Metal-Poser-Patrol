@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Black Metal Spelling Quiz</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0a0a; --bg2: #111111; --bg3: #1a1a1a;
+    --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.15);
+    --text: #e8e8e8; --text2: #888; --text3: #555;
+    --purple: #7B6FE8; --purple-dark: #534AB7; --purple-dim: rgba(123,111,232,0.15);
+    --green: #4a9e5c; --green-bg: rgba(74,158,92,0.1);
+    --red: #c0392b; --red-bg: rgba(192,57,43,0.1);
+    --amber: #c87941;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Georgia','Times New Roman',serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
+  header { text-align: center; margin-bottom: 2.5rem; }
+  header h1 { font-size: clamp(1.4rem,4vw,2rem); font-weight: normal; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text); margin-bottom: 0.4rem; }
+  header p { font-size: 0.8rem; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; font-family: 'Courier New',monospace; }
+  .divider { width: 60px; height: 1px; background: var(--border2); margin: 1rem auto; }
+  .card { width: 100%; max-width: 560px; background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; padding: 2rem; }
+  .progress-bar { height: 2px; background: var(--border); border-radius: 1px; margin-bottom: 1.5rem; }
+  .progress-fill { height: 100%; background: var(--purple); border-radius: 1px; transition: width 0.4s ease; }
+  .counter { font-size: 0.72rem; color: var(--text3); letter-spacing: 0.14em; text-transform: uppercase; font-family: 'Courier New',monospace; margin-bottom: 1rem; }
+  .lang-toggle { display: flex; gap: 6px; margin-bottom: 1.25rem; }
+  .lang-btn { font-size: 12px; padding: 4px 14px; border-radius: 20px; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--text2); font-family: 'Courier New',monospace; letter-spacing: 0.08em; transition: all 0.15s; }
+  .lang-btn.active { background: var(--purple-dark); border-color: var(--purple); color: #fff; }
+  .lang-btn:hover:not(.active) { border-color: var(--text2); color: var(--text); }
+  .hint-block { border-left: 2px solid var(--purple-dark); padding-left: 1.25rem; margin-bottom: 1.75rem; }
+  .band-name { font-size: 1.5rem; font-weight: normal; color: var(--text); letter-spacing: 0.04em; margin-bottom: 0.3rem; }
+  .album-year { font-size: 0.75rem; color: var(--purple); font-family: 'Courier New',monospace; letter-spacing: 0.1em; margin-bottom: 0.6rem; }
+  .album-hint-text { font-size: 0.82rem; color: var(--text2); line-height: 1.6; font-family: 'Courier New',monospace; }
+  .note { font-size: 0.72rem; font-family: 'Courier New',monospace; letter-spacing: 0.06em; margin-top: 0.5rem; }
+  .note.umlaut { color: var(--text3); }
+  .note.latin { color: var(--amber); }
+  input[type="text"] { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 3px; color: var(--text); font-family: 'Courier New',monospace; font-size: 1rem; letter-spacing: 0.06em; padding: 0.75rem 1rem; margin-top: 1rem; transition: border-color 0.2s; }
+  input[type="text"]:focus { outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-dim); }
+  input[type="text"]:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-row { display: flex; gap: 0.75rem; margin-top: 1rem; }
+  button { font-family: 'Courier New',monospace; font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 3px; padding: 0.6rem 1.25rem; cursor: pointer; transition: all 0.15s; }
+  .btn-submit { background: var(--purple-dark); border: 1px solid var(--purple); color: #fff; flex: 1; }
+  .btn-submit:hover { background: var(--purple); }
+  .btn-submit:disabled { opacity: 0.35; cursor: default; }
+  .btn-skip { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+  .btn-skip:hover { border-color: var(--text2); color: var(--text); }
+  .feedback { margin-top: 0.75rem; padding: 0.75rem 1rem; border-radius: 3px; font-size: 0.85rem; font-family: 'Courier New',monospace; line-height: 1.6; }
+  .feedback.correct { background: var(--green-bg); border: 1px solid rgba(74,158,92,0.3); color: #6bbf7a; }
+  .feedback.wrong { background: var(--red-bg); border: 1px solid rgba(192,57,43,0.3); color: #e07070; }
+  .feedback.skipped { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); }
+  .paste-warning { margin-top: 0.75rem; padding: 0.75rem 1rem; background: var(--purple-dark); border: 1px solid var(--purple); border-radius: 3px; font-family: 'Courier New',monospace; font-size: 0.9rem; letter-spacing: 0.12em; text-align: center; color: #fff; animation: flashIn 0.15s ease; }
+  @keyframes flashIn { from { opacity:0; transform:scale(0.97); } to { opacity:1; transform:scale(1); } }
+  .diff-ok { color: #6bbf7a; }
+  .diff-ng { background: rgba(192,57,43,0.25); color: #e07070; border-radius: 2px; padding: 0 1px; }
+  .diff-missing { background: rgba(200,121,65,0.25); color: #e09a5a; border-radius: 2px; padding: 0 1px; text-decoration: underline; }
+  .result-wrap { text-align: center; }
+  .result-score { font-size: 4rem; font-weight: normal; color: var(--purple); letter-spacing: 0.04em; margin-bottom: 0.2rem; }
+  .result-label { font-size: 0.72rem; color: var(--text3); letter-spacing: 0.2em; text-transform: uppercase; font-family: 'Courier New',monospace; margin-bottom: 1.25rem; }
+  .result-comment { font-size: 1rem; color: var(--text2); margin-bottom: 2rem; line-height: 1.6; }
+  .review-list { text-align: left; border: 1px solid var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 1.5rem; }
+  .review-item { display: grid; grid-template-columns: 20px 1fr auto; gap: 10px; align-items: center; padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.78rem; font-family: 'Courier New',monospace; }
+  .review-item:last-child { border-bottom: none; }
+  .review-item:nth-child(even) { background: rgba(255,255,255,0.02); }
+  .review-band { color: var(--text3); }
+  .review-correct { color: var(--green); }
+  .review-user-ok { color: var(--green); }
+  .review-user-ng { color: var(--red); }
+  .review-year { font-size: 0.68rem; color: var(--text3); white-space: nowrap; }
+  .mark-ok { color: var(--green); }
+  .mark-ng { color: var(--red); }
+  .mark-skip { color: var(--text3); }
+  .btn-retry { background: transparent; border: 1px solid var(--purple); color: var(--purple); padding: 0.75rem 2rem; font-size: 0.78rem; }
+  .btn-retry:hover { background: var(--purple-dim); }
+  footer { margin-top: 2.5rem; font-size: 0.68rem; color: var(--text3); letter-spacing: 0.1em; font-family: 'Courier New',monospace; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Black Metal Spelling Quiz</h1>
+  <div class="divider"></div>
+  <p>あなたのスペル力を試せ — コピペ厳禁</p>
+</header>
+<div class="card" id="app"></div>
+<footer>Death To False Metal</footer>
+<script>
+const albums = [
+  { band: "Mayhem", album: "De Mysteriis Dom Sathanas", year: 1994,
+    hint_ja: "ノルウェイジャンBMの最重要作。フルアルバム1st。Dead＆Euronymousの遺作。",
+    hint_en: "The most essential Norwegian BM album. Full-length 1st. The posthumous work of Dead & Euronymous." },
+  { band: "Mayhem", album: "Deathcrush", year: 1987,
+    hint_ja: "MayhemのデビューEP。フルアルバムではない。Maniac在籍時。",
+    hint_en: "Mayhem's debut EP. Not a full-length. Recorded with Maniac on vocals." },
+  { band: "Darkthrone", album: "A Blaze in the Northern Sky", year: 1992,
+    hint_ja: "ノルウェイジャンBMの礎。フルアルバム2nd。Fenrizが作り上げた冬の音像。",
+    hint_en: "The cornerstone of Norwegian BM. Full-length 2nd. A frozen soundscape crafted by Fenriz." },
+  { band: "Darkthrone", album: "Transilvanian Hunger", year: 1994,
+    hint_ja: "フルアルバム4th。白黒ジャケットが印象的。歴史的傑作。",
+    hint_en: "Full-length 4th. Iconic black-and-white cover. A landmark masterpiece." },
+  { band: "Burzum", album: "Filosofem", year: 1996,
+    hint_ja: "Burzum フルアルバム4th。VargのBM最高傑作と言われる幽玄なアンビエントBM。",
+    hint_en: "Burzum full-length 4th. Widely considered Varg's BM masterpiece — haunting ambient black metal." },
+  { band: "Burzum", album: "Hvis lyset tar oss", year: 1994,
+    hint_ja: "Burzum フルアルバム3rd。ノルウェー語タイトル、意味は『光が我々を奪うなら』。",
+    hint_en: "Burzum full-length 3rd. Norwegian title meaning \"If the Light Takes Us.\"" },
+  { band: "Emperor", album: "In the Nightside Eclipse", year: 1994,
+    hint_ja: "ノルウェイジャンシンフォニックBMの頂点。フルアルバム1st。",
+    hint_en: "The pinnacle of Norwegian symphonic BM. Full-length 1st." },
+  { band: "Emperor", album: "Anthems to the Welkin at Dusk", year: 1997,
+    hint_ja: "Emperor フルアルバム2nd。壮大なシンフォニックBMの完成形。",
+    hint_en: "Emperor full-length 2nd. A grandiose symphonic BM masterwork." },
+  { band: "Emperor", album: "IX Equilibrium", year: 1999,
+    hint_ja: "Emperor フルアルバム3rd。よりプログレッシブに進化した一枚。",
+    hint_en: "Emperor full-length 3rd. A more progressive evolution of their sound." },
+  { band: "Immortal", album: "Pure Holocaust", year: 1993,
+    hint_ja: "ノルウェイジャンBM。Immortal フルアルバム2nd。北極の嵐をイメージした名盤。",
+    hint_en: "Norwegian BM. Immortal full-length 2nd. A classic evoking Arctic blizzards." },
+  { band: "Immortal", album: "Blizzard Beasts", year: 1997,
+    hint_ja: "Immortal フルアルバム5th。スラッシュ寄りの問題作。",
+    hint_en: "Immortal full-length 5th. A controversial thrash-leaning entry." },
+  { band: "Gorgoroth", album: "Pentagram", year: 1994,
+    hint_ja: "ノルウェイジャンBM。Hat & Infernus。フルアルバム1st。初期の荒削りな傑作。",
+    hint_en: "Norwegian BM. Hat & Infernus. Full-length 1st. Raw and ferocious early work." },
+  { band: "Satyricon", album: "Nemesis Divina", year: 1996,
+    hint_ja: "ノルウェイジャンBM。SatyrとFrost。フルアルバム3rd。メロディックなBMの名盤。",
+    hint_en: "Norwegian BM. Satyr & Frost. Full-length 3rd. A landmark melodic BM album." },
+  { band: "Bathory", album: "Under the Sign of the Black Mark", year: 1987,
+    hint_ja: "スウェーデンのBM元祖Quorthon。フルアルバム3rd。BM/ヴァイキングの神。",
+    hint_en: "Full-length 3rd by Swedish BM pioneer Quorthon. A god of BM and Viking metal." },
+  { band: "Naglfar", album: "Diabolical", year: 1998,
+    hint_ja: "スウェーデンのメロBM。フルアルバム2nd。naglfar＝爪の船（北欧神話）。",
+    hint_en: "Swedish melodic BM. Full-length 2nd. \"Naglfar\" means \"nail ship\" in Norse mythology." },
+  { band: "Naglfar", album: "Sheol", year: 2003,
+    hint_ja: "Naglfar フルアルバム3rd。アルバムタイトルはヘブライ語で「死者の国」。",
+    hint_en: "Naglfar full-length 3rd. The album title is Hebrew for \"the realm of the dead.\"" },
+  { band: "Dissection", album: "The Somberlain", year: 1993,
+    hint_ja: "Jon Nödtveidtのデビュー作。フルアルバム1st。メロデスとBMの融合。",
+    hint_en: "Jon Nödtveidt's debut. Full-length 1st. A fusion of melodic death metal and BM." },
+  { band: "Dissection", album: "Storm of the Light's Bane", year: 1995,
+    hint_ja: "Dissection フルアルバム2nd。メロBMの金字塔。",
+    hint_en: "Dissection full-length 2nd. A landmark of melodic BM." },
+  { band: "Deathspell Omega", album: "Si Monvmentvm Reqvires, Circvmspice", year: 2004,
+    hint_ja: "フランスBM。フルアルバム3rd。ラテン語タイトル、V/U混用に注意！",
+    hint_en: "French BM. Full-length 3rd. Latin title — watch out for the V/U distinction!", strictSpelling: true },
+  { band: "Deathspell Omega", album: "Paracletus", year: 2010,
+    hint_ja: "Deathspell Omega フルアルバム5th。神学三部作の完結編。不協和音ブラックメタルブームを生み出した歴史的傑作!!",
+    hint_en: "Deathspell Omega full-length 5th. The conclusion of the theological trilogy. A landmark album that sparked the dissonant BM movement!!" },
+];
+
+const umlautMap = {'ä':'a','ö':'o','ü':'u','ë':'e','ï':'i','Ä':'A','Ö':'O','Ü':'U','Ë':'E','Ï':'I'};
+function stripUmlauts(s) { return s.split('').map(c => umlautMap[c]||c).join(''); }
+function normalize(s, strict) { const t = s.trim().toLowerCase().replace(/\s+/g,' '); return strict ? t : stripUmlauts(t); }
+function shuffle(arr) { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function diffHighlight(correct, user) {
+  const c=correct, u=user; let html='', ci=0, ui=0;
+  while(ci<c.length||ui<u.length){
+    if(ci<c.length&&ui<u.length&&c[ci]===u[ui]){html+=`<span class="diff-ok">${c[ci]}</span>`;ci++;ui++;}
+    else if(ui<u.length&&(ci>=c.length||c[ci]!==u[ui])){html+=`<span class="diff-ng">${u[ui]}</span>`;ui++;if(ci<c.length&&c[ci]!==(u[ui]||'')){html+=`<span class="diff-missing">${c[ci]}</span>`;ci++;}}
+    else{html+=`<span class="diff-missing">${c[ci]}</span>`;ci++;}
+  }
+  return html;
+}
+function getComment(score, total, lang) {
+  const p = score/total;
+  if(lang==='en'){
+    if(p===1) return 'Perfect...! Did you sell your soul to the devil?';
+    if(p>=0.8) return 'Impressive! You nailed most of them.';
+    if(p>=0.6) return "Not bad! More than half correct.";
+    if(p>=0.4) return "Well, it's Norwegian. Cut yourself some slack.";
+    if(p>=0.2) return 'Honestly? That was pretty rough (lol)';
+    return 'This is blasphemy against black metal. (With love)';
+  }
+  if(p===1) return '完璧…！悪魔に魂でも売ったか？';
+  if(p>=0.8) return 'さすが！ほぼ正確にスペルできている。';
+  if(p>=0.6) return 'なかなかやるな。半分以上は合ってた！';
+  if(p>=0.4) return 'まあ、ノルウェー語だし仕方ない。';
+  if(p>=0.2) return '正直に言おう。だいぶひどかった（笑）';
+  return 'これはもはやブラックメタルへの冒涜だ（愛を込めて）';
+}
+
+let queue=[], current=0, results=[], lang='ja';
+
+function startQuiz() { queue=shuffle(albums).slice(0,10); current=0; results=[]; renderQuestion(); }
+
+function setLang(l) {
+  lang = l;
+  const q = queue[current];
+  if(q) {
+    document.getElementById('hint-text').textContent = q['hint_'+lang];
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang===lang));
+  }
+}
+
+function renderQuestion() {
+  const app = document.getElementById('app');
+  if(current>=queue.length){renderResult();return;}
+  const q = queue[current];
+  const hasUmlaut = !q.strictSpelling && /[äöüëïÄÖÜËÏ]/.test(q.album);
+  const pct = (current/queue.length)*100;
+  app.innerHTML = `
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="counter">問題 ${current+1} &nbsp;/&nbsp; ${queue.length}</div>
+    <div class="lang-toggle">
+      <button class="lang-btn ${lang==='ja'?'active':''}" data-lang="ja" onclick="setLang('ja')">日本語</button>
+      <button class="lang-btn ${lang==='en'?'active':''}" data-lang="en" onclick="setLang('en')">English</button>
+    </div>
+    <div class="hint-block">
+      <div class="band-name">${q.band}</div>
+      <div class="album-year">${q.year}</div>
+      <div class="album-hint-text" id="hint-text">${q['hint_'+lang]}</div>
+    </div>
+    ${hasUmlaut?'<div class="note umlaut">* ウムラウト（ä ö ü）は省略してもOKです</div>':''}
+    ${q.strictSpelling?'<div class="note latin">⚠ ラテン語厳密判定：V/U の区別も正確に入力してください</div>':''}
+    <input type="text" id="ans" placeholder="アルバム名をスペルしてください..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+    <div id="feedback"></div>
+    <div id="paste-msg"></div>
+    <div class="btn-row">
+      <button class="btn-skip" onclick="skipQ()">Skip</button>
+      <button class="btn-submit" id="submitBtn" onclick="submitQ()">答え合わせ</button>
+    </div>
+  `;
+  const inp = document.getElementById('ans');
+  inp.focus();
+  inp.addEventListener('keydown', e => { if(e.key==='Enter') submitQ(); });
+  inp.addEventListener('paste', e => {
+    e.preventDefault();
+    const pm = document.getElementById('paste-msg');
+    pm.innerHTML = '<div class="paste-warning">⚡ Death To False Metal! ⚡</div>';
+    setTimeout(() => { pm.innerHTML=''; }, 2000);
+  });
+  inp.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+function submitQ() {
+  const inp = document.getElementById('ans');
+  const user = inp.value;
+  if(!user.trim()) return;
+  const q = queue[current];
+  const correct = normalize(q.album, q.strictSpelling) === normalize(user, q.strictSpelling);
+  const fb = document.getElementById('feedback');
+  document.getElementById('submitBtn').disabled = true;
+  inp.disabled = true;
+  if(correct){
+    fb.className='feedback correct';
+    fb.innerHTML=`正解！ &mdash; ${q.album}`;
+  } else {
+    const diff = diffHighlight(q.album, user.trim());
+    fb.className='feedback wrong';
+    fb.innerHTML=`不正解… 正解: <span style="display:inline-block;margin-top:4px">${diff}</span><br><span style="font-size:0.7rem;color:#555;margin-top:4px;display:block">赤=余分な文字 / 下線オレンジ=抜けた文字</span>`;
+  }
+  results.push({q, user:user.trim(), correct, skipped:false});
+  setTimeout(() => { current++; renderQuestion(); }, correct ? 1200 : 2500);
+}
+
+function skipQ() {
+  const q = queue[current];
+  results.push({q, user:'', correct:false, skipped:true});
+  const fb = document.getElementById('feedback');
+  fb.className='feedback skipped';
+  fb.innerHTML=`正解は &mdash; ${q.album}`;
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('ans').disabled = true;
+  setTimeout(() => { current++; renderQuestion(); }, 1500);
+}
+
+function renderResult() {
+  const app = document.getElementById('app');
+  const score = results.filter(r=>r.correct).length;
+  const total = results.length;
+  const comment = getComment(score, total, lang);
+  let rows = results.map(r => {
+    let mark, userDisp;
+    if(r.correct){mark=`<span class="mark-ok"><i class="ti ti-check"></i></span>`;userDisp=`<span class="review-user-ok">${r.user}</span>`;}
+    else if(r.skipped){mark=`<span class="mark-skip"><i class="ti ti-minus"></i></span>`;userDisp=`<span style="color:#333">—</span>`;}
+    else{mark=`<span class="mark-ng"><i class="ti ti-x"></i></span>`;userDisp=`<span class="review-user-ng">${r.user||'（未入力）'}</span>`;}
+    return `<div class="review-item">${mark}<div><span class="review-band">${r.q.band} / </span><span class="review-correct">${r.q.album}</span><br>${userDisp}</div><span class="review-year">${r.q.year}</span></div>`;
+  }).join('');
+  app.innerHTML = `
+    <div class="result-wrap">
+      <div class="result-score">${score} / ${total}</div>
+      <div class="result-label">正解数</div>
+      <div class="result-comment">${comment}</div>
+      <div class="review-list">${rows}</div>
+      <button class="btn-retry" onclick="startQuiz()">もう一度挑戦する</button>
+    </div>
+  `;
+}
+
+startQuiz();
+</script>
+</body>
+</html>
